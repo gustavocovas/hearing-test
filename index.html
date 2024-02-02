@@ -14,11 +14,14 @@
   <body>
     <h1>"Hearing test"</h1>
 
-    <input type="range" id="slider" min="0" max="100" value="50" step="1" />
+    <input type="range" id="frequency" min="0" max="100" value="0.5" step="1" />
 
     <div id="output">Slider Value: 50</div>
 
     <button id="toggle" onclick="togglePlaying()">Play</button>
+
+    <p>Volume:</p>
+    <input type="range" id="volume" min="0" max="1" value="0.5" step="0.01" />
 
     <p>
       There are some "Hearing tests" out there where you hear a continous sound
@@ -28,7 +31,8 @@
     </p>
 
     <script>
-      var slider = document.getElementById("slider");
+      var volume = document.getElementById("volume");
+      var slider = document.getElementById("frequency");
       var output = document.getElementById("output");
       var toggle = document.getElementById("toggle");
 
@@ -38,17 +42,26 @@
         window.webkitAudioContext)();
       var oscillator;
 
-      // Display initial slider value
-      output.innerHTML = "Freq: " + sliderToFreq(slider.value) + " Hz";
+      var gainNode = audioContext.createGain();
+      gainNode.connect(audioContext.destination);
+
+      output.innerHTML = "Freq: " + sliderToFreq(frequency.value) + " Hz";
 
       // Update the output when the slider value changes
-      slider.addEventListener("input", function () {
-        output.innerHTML = "Freq: " + sliderToFreq(slider.value) + " Hz";
+      frequency.addEventListener("input", function () {
+        output.innerHTML = "Freq: " + sliderToFreq(frequency.value) + " Hz";
 
         if (!!oscillator) {
           var now = audioContext.currentTime;
-          oscillator.frequency.setValueAtTime(sliderToFreq(slider.value), now);
+          oscillator.frequency.setValueAtTime(
+            sliderToFreq(frequency.value),
+            now
+          );
         }
+      });
+
+      volume.addEventListener("input", function () {
+        gainNode.gain.value = volume.value;
       });
 
       function sliderToFreq(sliderValue) {
@@ -64,7 +77,7 @@
           oscillator.type = "sine"; // Set oscillator type to sine wave
 
           // Connect the oscillator to the audio context's destination (speakers)
-          oscillator.connect(audioContext.destination);
+          oscillator.connect(gainNode);
 
           var now = audioContext.currentTime;
           oscillator.frequency.setValueAtTime(sliderToFreq(slider.value), now);
