@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slider Example</title>
+    <style>
+      #output {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>"Hearing test"</h1>
+
+    <input type="range" id="slider" min="0" max="100" value="50" step="1" />
+
+    <div id="output">Slider Value: 50</div>
+
+    <button id="toggle" onclick="togglePlaying()">Play</button>
+
+    <p>
+      There are some "Hearing tests" out there where you hear a continous sound
+      that slides from a low to a high frequency. I wanted to build an
+      interactive version of that while experimenting with the sound web APIs,
+      so here we are.
+    </p>
+
+    <script>
+      var slider = document.getElementById("slider");
+      var output = document.getElementById("output");
+      var toggle = document.getElementById("toggle");
+
+      var playing = false;
+
+      var audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      var oscillator;
+
+      // Display initial slider value
+      output.innerHTML = "Freq: " + sliderToFreq(slider.value) + " Hz";
+
+      // Update the output when the slider value changes
+      slider.addEventListener("input", function () {
+        output.innerHTML = "Freq: " + sliderToFreq(slider.value) + " Hz";
+
+        if (!!oscillator) {
+          var now = audioContext.currentTime;
+          oscillator.frequency.setValueAtTime(sliderToFreq(slider.value), now);
+        }
+      });
+
+      function sliderToFreq(sliderValue) {
+        // convert 0-100 to 20-20000 range
+        return 20 + Math.round((sliderValue / 100) * 19980);
+      }
+
+      function togglePlaying() {
+        // Create an oscillator (sine wave)
+
+        if (!playing) {
+          oscillator = audioContext.createOscillator();
+          oscillator.type = "sine"; // Set oscillator type to sine wave
+
+          // Connect the oscillator to the audio context's destination (speakers)
+          oscillator.connect(audioContext.destination);
+
+          var now = audioContext.currentTime;
+          oscillator.frequency.setValueAtTime(sliderToFreq(slider.value), now);
+
+          oscillator.start();
+          playing = true;
+          toggle.innerText = "Pause";
+        } else {
+          oscillator.stop();
+          playing = false;
+          toggle.innerText = "Play";
+        }
+      }
+    </script>
+  </body>
+</html>
